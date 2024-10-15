@@ -32,10 +32,11 @@ jobs:
           echo "$EC2_KEY_BASE64" | base64 -d > /tmp/ec2-key.pem
           chmod 400 /tmp/ec2-key.pem  # Ensure the key file has correct permissions
 
-          # Install JDK 21 on the EC2 instance
-          ssh -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem $EC2_USER@$EC2_HOST "sudo yum update -y && sudo amazon-linux-extras enable corretto8 && sudo yum install -y java-21-amazon-corretto-devel"
+          # Install JDK 21 on the EC2 instance using OpenJDK
+          ssh -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem $EC2_USER@$EC2_HOST "sudo yum update -y && sudo yum install -y wget && wget https://download.java.net/java/GA/jdk21/20/GPL/openjdk-21_linux-x64_bin.tar.gz && sudo tar -xvf openjdk-21_linux-x64_bin.tar.gz -C /opt && sudo ln -s /opt/jdk-21 /usr/local/java"
+  
 
-          # Upload the JAR file
+  # Upload the JAR file
           scp -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem target/*.jar $EC2_USER@$EC2_HOST:/home/ec2-user/app.jar
 
           # Restart the application
