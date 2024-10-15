@@ -41,12 +41,6 @@ jobs:
           echo "Checking Java version..."
           java -version
         
-          if ! command -v java &> /dev/null || [[ $(java -version 2>&1) != *"version \"17"* ]]; then
-          echo "Installing Java 17..."
-          sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk
-          fi
-        
           echo "Stopping existing application..."
           pkill -f app.jar || true
         
