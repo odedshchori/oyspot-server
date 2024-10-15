@@ -34,9 +34,9 @@ jobs:
           # Install JDK 21 on the EC2 instance using OpenJDK
           ssh -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem $EC2_USER@$EC2_HOST 
           "sudo yum update -y &&
-          sudo amazon-linux-extras enable corretto8 &&
-          sudo yum install -y java-21-openjdk-headless &&
-          sudo alternatives --set java /usr/lib/jvm/java-21-openjdk/bin/java"
+          sudo curl -L -o /etc/yum.repos.d/corretto.repo https://yum.corretto.aws/corretto.repo &&
+          sudo yum install -y java-21-amazon-corretto-headless"
+
   
           # Upload the JAR file
           scp -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem target/*.jar $EC2_USER@$EC2_HOST:/home/ec2-user/app.jar
