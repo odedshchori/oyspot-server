@@ -11,10 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
 
       - name: Build with Maven
@@ -29,12 +29,29 @@ jobs:
           # Decode the base64-encoded SSH key and save it as a file
           echo "$PRIVATE_KEY" | base64 -d > /tmp/ec2-key.pem
           chmod 400 /tmp/ec2-key.pem  # Ensure the key file has correct permissions
+         
+          echo "Testing SSH connection..."
+          ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${USER}@${HOST} 'echo "SSH connection successful"'
+        
+          echo "Copying JAR file..."
           scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no target/*.jar ${USER}@${HOST}:~/app.jar
+        
+          echo "Executing remote commands..."
           ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no ${USER}@${HOST} '
-            if ! command -v java &> /dev/null || [[ $(java -version 2>&1) != *"version \"21"* ]]; then
-              sudo apt-get update
-              sudo apt-get install -y openjdk-21-jdk
-            fi
-            pkill -f app.jar || true
-            nohup java -jar ~/app.jar > app.log 2>&1 &
+          echo "Checking Java version..."
+          java -version
+        
+          if ! command -v java &> /dev/null || [[ $(java -version 2>&1) != *"version \"17"* ]]; then
+          echo "Installing Java 17..."
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk
+          fi
+        
+          echo "Stopping existing application..."
+          pkill -f app.jar || true
+        
+          echo "Starting new application..."
+          nohup java -jar ~/app.jar > app.log 2>&1 &
+        
+          echo "Deployment completed."
           '
