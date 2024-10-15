@@ -26,14 +26,17 @@ jobs:
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_KEY: ${{ secrets.EC2_KEY }}
+          EC2_KEY_BASE64: ${{ secrets.EC2_KEY }}
         run: |
-          chmod 400 $EC2_KEY  # Ensure key file has correct permissions
+          # Decode the base64-encoded SSH key and save it as a file
+          echo "$EC2_KEY_BASE64" | base64 -d > /tmp/ec2-key.pem
+          chmod 400 /tmp/ec2-key.pem  # Ensure the key file has correct permissions
+
           # Install JDK 21 on the EC2 instance
-          ssh -o StrictHostKeyChecking=no -i $EC2_KEY $EC2_USER@$EC2_HOST "sudo yum update -y && sudo amazon-linux-extras enable corretto8 && sudo yum install -y java-21-amazon-corretto-devel"
-          
+          ssh -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem $EC2_USER@$EC2_HOST "sudo yum update -y && sudo amazon-linux-extras enable corretto8 && sudo yum install -y java-21-amazon-corretto-devel"
+
           # Upload the JAR file
-          scp -o StrictHostKeyChecking=no -i $EC2_KEY target/*.jar $EC2_USER@$EC2_HOST:/home/ec2-user/app.jar
-          
+          scp -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem target/*.jar $EC2_USER@$EC2_HOST:/home/ec2-user/app.jar
+
           # Restart the application
-          ssh -o StrictHostKeyChecking=no -i $EC2_KEY $EC2_USER@$EC2_HOST "sudo systemctl restart my-spring-app.service"
+          ssh -o StrictHostKeyChecking=no -i /tmp/ec2-key.pem $EC2_USER@$EC2_HOST "sudo systemctl restart my-spring-app.service"
