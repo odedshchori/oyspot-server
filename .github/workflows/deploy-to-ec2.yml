@@ -22,30 +22,38 @@ jobs:
 
       - name: Deploy to EC2
         env:
-          PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
         run: |
-          # Decode the base64-encoded SSH key and save it as a file
+          echo "Decoding private key..."
           echo "$PRIVATE_KEY" | base64 -d > /tmp/ec2-key.pem
-          chmod 400 /tmp/ec2-key.pem  # Ensure the key file has correct permissions
-         
+          chmod 400 /tmp/ec2-key.pem
+
           echo "Testing SSH connection..."
           ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${USER}@${HOST} 'echo "SSH connection successful"'
-        
+
           echo "Copying JAR file..."
           scp -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no target/*.jar ${USER}@${HOST}:~/app.jar
-        
+
           echo "Executing remote commands..."
           ssh -i /tmp/ec2-key.pem -o StrictHostKeyChecking=no ${USER}@${HOST} '
-          echo "Checking Java version..."
-          java -version
-        
-          echo "Stopping existing application..."
-          pkill -f app.jar || true
-        
-          echo "Starting new application..."
-          nohup java -jar ~/app.jar > app.log 2>&1 &
-        
-          echo "Deployment completed."
+            set -x
+            echo "Checking Java version..."
+            java -version
+
+            echo "Checking for existing application..."
+            ps aux | grep app.jar
+
+            echo "Stopping existing application..."
+            pkill -f app.jar || echo "No existing application found or unable to stop"
+
+            echo "Starting new application..."
+            nohup java -jar ~/app.jar > app.log 2>&1 &
+
+            echo "Checking if application started..."
+            sleep 5
+            ps aux | grep app.jar
+
+            echo "Deployment completed."
           '
