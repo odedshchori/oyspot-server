@@ -15,7 +15,7 @@ public class SimpleController {
     public List<Playlist> getPlaylists() {
         List<Playlist> playlists = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
-            Playlist playlist = new Playlist("Playlist " + (i + 1), (i + 1) * 7, "https://loremflickr.com/cache/resized/65535_49259751096_8cd762d9fc_n_320_240_g.jpg", i % 2 == 0, "John Doe");
+            Playlist playlist = new Playlist("Playlist " + (i + 1), (i + 1) * 7, "https://loremflickr.com/cache/resized/65535_49259751096_8cd762d9fc_n_320_240_g.jpg", i % 2 == 0, "John Doe " + i);
             playlists.add(playlist);
         }
         return playlists;
